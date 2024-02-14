@@ -5,7 +5,7 @@ import os
 import slack_sdk
 
 # Slack 토큰과 채널 ID를 설정합니다.
-slack_token = "xoxb-6601910296005-6648162197841-51B03TZW8DlK7Ma95bS8E2wG"
+slack_token = "각자 발급받은 토큰삽입할것"
 client = slack_sdk.WebClient(token=slack_token)
 
 # socks 프로토콜을 지원하는 requests 라이브러리를 사용
@@ -18,7 +18,7 @@ end_page = 10
 # 각 페이지를 순회하며 크롤링을 수행합니다.
 for page_num in range(start_page, end_page + 1):
     # 페이지 번호를 URL에 포함시킵니다.
-    url = f"http://bianlianlbc5an4kgnay3opdemgcryg2kpfcbgczopmm3dnbz3uaunad.onion/page/{page_num}"
+    url = f"http://각자원하는 사이트지정할것/page/{page_num}"
 
     # 해당 URL에 요청을 보냅니다.
     response = requests.get(url, proxies=proxies)
