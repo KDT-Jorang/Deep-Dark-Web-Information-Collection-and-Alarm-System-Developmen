@@ -136,7 +136,7 @@ def load_retry(driver, URL, max_attempts, page_number):
 #크롤링 메인 부분
 def main():
     start_page = 1
-    end_page = 2
+    end_page = 7
 
     result = []
     try:
