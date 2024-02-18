@@ -5,7 +5,7 @@ import json
 import os
 
 # Slack 토큰과 채널 ID를 설정합니다.
-slack_token = "xoxb-6601910296005-6648162197841-tYHO53eWaJeuq9crKVpciM2F"
+slack_token = "xㅋㅌㅊㅋㅍㅋㅇㄹVpciM2F"
 client = slack_sdk.WebClient(token=slack_token)
 
 # socks 프로토콜을 지원하는 requests 라이브러리를 사용
