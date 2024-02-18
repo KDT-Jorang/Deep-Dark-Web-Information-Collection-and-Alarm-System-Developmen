@@ -37,7 +37,7 @@ def sending_slack(use_new_file):
     file_path = os.path.join(contents_file, file_name)
     
 
-    webhook_url = "https://hooks.slack.com/services/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"
+    webhook_url = "여기 채워주세요"
 
     try:
         # utf-8 인코딩으로 파일 열기
