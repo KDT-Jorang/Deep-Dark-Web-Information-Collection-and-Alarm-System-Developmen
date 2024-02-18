@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import slack_sdk
+import os
+import json
 
 # Slack 토큰과 채널 ID를 설정합니다.
 slack_token = "발급받은 토큰 사용할것"
@@ -42,9 +44,21 @@ for page_num in range(start_page, end_page + 1):
     for title, description in zip(title_texts, description_texts):
         items.append((title, description))
 
-# 리스트를 뒤집어 가장 오래된 아이템부터 Slack에 메시지로 보냅니다.
-items.reverse()
+# 이전에 크롤링한 데이터를 불러옵니다.
+if os.path.exists('previous_items.json'):
+    with open('previous_items.json', 'r') as f:
+        previous_items = json.load(f)
+else:
+    previous_items = []
 
-for title, description in items:
+# 새롭게 크롤링한 데이터와 이전 데이터를 비교합니다.
+new_items = [item for item in items if item not in previous_items]
+
+# 새로운 아이템만 Slack으로 전송합니다.
+for title, description in new_items:
     text = f"Title: {title}\nDescription: {description}"
     client.chat_postMessage(channel="업로드할 체널명 입력할것", text=text)
+
+# 새롭게 크롤링한 데이터를 저장합니다.
+with open('previous_items.json', 'w') as f:
+    json.dump(items, f)
