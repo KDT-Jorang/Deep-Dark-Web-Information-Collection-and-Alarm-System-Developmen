@@ -129,7 +129,7 @@ def load_retry(driver, URL, max_attempts, page_number):
 
 def main():
     start_page = 1
-    end_page = 3
+    end_page = 7
     result = []
     try:
         for page_number in range(start_page, end_page + 1):
