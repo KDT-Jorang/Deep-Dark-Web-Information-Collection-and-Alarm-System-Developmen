@@ -5,13 +5,13 @@ import json
 import os
 
 # Slack 토큰과 채널 ID를 설정합니다.
-slack_token = "xㅋㅌㅊㅋㅍㅋㅇㄹVpciM2F"
+slack_token = "발급받아 사용할것"
 client = slack_sdk.WebClient(token=slack_token)
 
 # socks 프로토콜을 지원하는 requests 라이브러리를 사용
 proxies = {"http": "socks5h://localhost:19050", "https": "socks5h://localhost:19051"}
 
-# 시작 페이지와 끝 페이지를 설정합니다.
+# 시작 페이지와 끝 페이지를 설정합니다. 
 start_page = 1
 end_page = 3
 
