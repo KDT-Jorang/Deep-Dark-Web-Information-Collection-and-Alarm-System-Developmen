@@ -62,7 +62,169 @@ def sending_slack(use_new_file):
     if response.status_code == 200:
         print("메시지가 성공적으로 전송되었습니다.")
     else:
-        print(f"메시지 전송 실패: {response.status_code}, 응답: {respo채워주세요"
+        print(f"메시지 전송 실패: {response.status_code}, 응답: {response.text}")
+
+
+#######################################################################################################################
+
+# 새로운 피해 기업이 있는지 확인
+def check_news(result):
+    contents_file = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(contents_file, 'victim_list.txt')
+    use_new_file = None
+    if not os.path.exists(contents_file):
+        os.makedirs(contents_file)
+    existing_titles = set()
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f_read:
+            for line in f_read:
+                if line.startswith('제목 : '):
+                    title = line.strip().replace('제목 : ', '')
+                    existing_titles.add(title)
+            
+    except FileNotFoundError:
+        pass
+    
+    # 새로운 항목 있는지 title로 확인
+
+    new_post = ''
+    for title, utime, href in result:
+        if title not in existing_titles:
+            new_post += '\n\n' + f'제목 : {title}\n게시날짜 : {utime}\n링크 : {href}\n\n'
+            print(f"새로운 피해 기업 : {title}")
+    
+    if new_post:
+        with open(file_path, 'w', encoding='utf-8') as f_write:
+            f_write.write(new_post + '\n\n' +'################\n' + datetime.today().strftime("%Y/%m/%d %H:%M:%S") + f'\n총 피해기업 : {len(result)}\n################\n')
+            print("저장완료, 슬랙으로 전송합니다.")
+        sending_slack(use_new_file)
+    else:
+        message = "추가 피해는 없습니다."
+        webhook_url = "여기 채워주세요요"
+        payload = {'text' : message}
+        json_payload = json.dumps(payload)
+        response = requests.post(webhook_url, data=json_payload, headers={'Content-Type': 'application/json'})
+
+        if response.status_code == 200:
+            print("메시지가 성공적으로 전송되었습니다.")
+        else:
+            print(f"메시지 전송 실패: {response.status_code}, 응답: {response.text}")
+
+
+    
+#######################################################################################################################
+
+max_attempts = 5
+# 블랙캣은 튕기는 경우가 너무 많아 추가 연결 구현
+
+def load_retry(driver, URL, max_attempts, page_number):
+     attempts = 0
+     while attempts < max_attempts :
+        try:
+            driver.get(URL)
+            WebDriverWait(driver, 30).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/app-root/app-shell/div/app-blog/app-loader/div/div/div[2]/div[1]/div[2]/div[1]")))
+            print(f"{page_number}페이지 연결 성공")
+            break
+        except (TimeoutException, NoSuchElementException) as e:
+            print(f"재시도 {attempts + 1}: {e}")
+            attempts +=1
+            if attempts == max_attempts:
+                print(f"{page_number}페이지 연결 실패, 다음 페이지로 넘어갑니다.")
+
+#######################################################################################################################
+
+#크롤링 메인 부분
+def main():
+    start_page = 1
+    end_page = 2
+
+    result = []
+    try:
+        for page_number in range(start_page, end_page + 1):
+            URL = f"http://alphvuzxyxv6ylumd2ngp46xzq3pw6zflomrghvxeuks6kklberrbmyd.onion/?page={page_number}"
+            with webdriver.Chrome(service=service, options=chrome_options) as driver:
+                load_retry(driver, URL, max_attempts, page_number)
+                """ driver.set_page_load_timeout(600)
+                driver.get(URL)
+                time.sleep(20) """
+                
+                for i in range(1, 10) :
+                    new_post_id = f"/html/body/app-root/app-shell/div/app-blog/app-loader/div/div/div[2]/div[{i}]/div[2]/div[1]"
+                    new_contents_link= f'/html/body/app-root/app-shell/div/app-blog/app-loader/div/div/div[2]/div[{i}]/div[3]/div[2]/a'
+                    upload_time_xpath = f'/html/body/app-root/app-shell/div/app-blog/app-loader/div/div/div[2]/div[{i}]/div[2]/div[2]'
+                                
+                        # 제목만 불러오는 부분
+                    try:
+                        new_post_title = driver.find_element(By.XPATH, new_post_id)
+                        title = new_post_title.text
+                    except NoSuchElementException:
+                            #print(f"NO title : {i}")
+                            continue
+                                    
+                        # 링크 불러오는 부분
+                    try:
+                        new_contents= driver.find_element(By.XPATH, new_contents_link) #element와 elements 조심할 것.
+                        href = new_contents.get_attribute('href')
+                    except NoSuchElementException:
+                            #print(f"NO link in {i}")
+                            continue           
+                                    
+                        # 업로드 날짜 불러오는 부분
+                    try:
+                        upload_time = driver.find_element(By.XPATH, upload_time_xpath)
+                        utime = upload_time.text
+                    except NoSuchElementException:
+                            #print(f"NO time info : {i}")
+                            continue
+                        
+                    result.append((title, utime, href))
+                    
+
+                     
+    except (NoSuchElementException, TimeoutException):
+            print(f"Error {page_number}")                              
+    
+    return result
+    
+
+
+
+# 전체 피해 확인 후 이후에 새로운 피해 기업이 있는지 확인하는 함수 
+def new(result):
+    contents_file = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(contents_file, 'victim_list.txt')
+    new_file_path = os.path.join(contents_file, 'new_victim_list.txt')
+    use_new_file = 'new_victim_list.txt'
+    
+    if not os.path.exists(contents_file):
+        os.makedirs(contents_file)
+    
+    existing_titles = set()
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f_read:
+            for line in f_read:
+                if line.startswith('제목 : '):
+                    title = line.strip().replace('제목 : ', '')
+                    existing_titles.add(title.strip())
+            
+    except FileNotFoundError:
+        pass
+    
+    new_post = ''
+
+    for title, utime, href in result:
+        if title.strip() not in existing_titles:
+            new_post += '\n\n' + f'제목 : {title}\n게시날짜 : {utime}\n링크 : {href}\n\n'
+            print(f"새로운 피해 기업 : {title}")
+    
+    if new_post:
+        with open(new_file_path, 'w', encoding='utf-8') as f_write:
+            f_write.write(new_post + '\n\n' +'################\n' + datetime.today().strftime("%Y/%m/%d %H:%M:%S") + f'\n새로운 피해기업 : {len(result)}\n################\n')
+            print("저장완료, 슬랙으로 전송합니다.")
+        sending_slack(use_new_file)
+    else:
+        message = "추가 피해는 없습니다."
+        webhook_url = "여기 채워주세요"
         payload = {'text' : message}
         json_payload = json.dumps(payload)
         response = requests.post(webhook_url, data=json_payload, headers={'Content-Type': 'application/json'})
