@@ -9,6 +9,7 @@ slack_token = "발급받은 토큰 사용할것"
 client = slack_sdk.WebClient(token=slack_token)
 
 # socks 프로토콜을 지원하는 requests 라이브러리를 사용
+#torrc 설정값을 확인하고 적절히 수정후 사용해야합니다.
 proxies = {"http": "socks5h://localhost:9150", "https": "socks5h://localhost:9150"}
 
 # 시작 페이지와 끝 페이지를 설정합니다.
